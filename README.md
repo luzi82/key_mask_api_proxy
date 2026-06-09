@@ -18,6 +18,8 @@ This project acts as a secure pass-through proxy using **Key Masking**:
 
 ## Deployment
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fluzi82%2Fkey_mask_api_proxy&env=TARGET_HOST%2CENCRYPTION_KEY_BASE64)
+
 Since this is a private project, you can deploy your own instance manually:
 
 1. Push this repository to your private GitHub/GitLab/Bitbucket account.
