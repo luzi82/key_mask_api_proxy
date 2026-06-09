@@ -3,10 +3,6 @@ export const config = {
   regions: ['sin1'], // singapore
 };
 
-const crypto = require('crypto');
-
-const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
-
 export default async function handler(request) {
   const url = new URL(request.url);
 
@@ -40,13 +36,37 @@ export default async function handler(request) {
     return new Response('Invalid API key format', { status: 400 });
   }
 
+  let realKey;
   try {
-    const iv = Buffer.from(ivBase64, 'base64');
-    const encryptedKey = Buffer.from(encryptedKeyBase64, 'base64');
-    const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, Buffer.from(encryptionKey, 'base64'), iv);
-    let decrypted = decipher.update(encryptedKey);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    var realKey = decrypted.toString();
+    const decodeBase64 = (base64) => {
+      const binString = atob(base64);
+      const bytes = new Uint8Array(binString.length);
+      for (let i = 0; i < binString.length; i++) {
+        bytes[i] = binString.charCodeAt(i);
+      }
+      return bytes;
+    };
+
+    const rawKey = decodeBase64(encryptionKey);
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      rawKey,
+      { name: 'AES-CBC' },
+      false,
+      ['decrypt']
+    );
+
+    const iv = decodeBase64(ivBase64);
+    const encryptedData = decodeBase64(encryptedKeyBase64);
+
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: 'AES-CBC', iv: iv },
+      cryptoKey,
+      encryptedData
+    );
+
+    const decoder = new TextDecoder();
+    realKey = decoder.decode(decryptedBuffer);
   } catch (error) {
     return new Response('Failed to decrypt API key', { status: 400 });
   }  
